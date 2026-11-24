@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ app_name }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/static/beamly.png"><link rel="apple-touch-icon" href="/static/beamly.png">
+<link rel="stylesheet" href="/static/ui.css">
+<script src="/static/icons.js"></script>
+<style>
+:root{
+  --surface:rgba(255,255,255,.93); --solid:#fff; --soft:#F7F8FC; --line:#E5E8F1; --line2:#EEF0F6;
+  --text:#121829; --muted:#67708A; --faint:#9AA2B6;
+  --brand:#4F5BFF; --brand2:#8B5CF6; --brand-soft:#EEF0FF;
+  --ok:#12A779; --ok-soft:#E4F7EF; --bad:#E5484D; --bad-soft:#FDECEC;
+  --r:20px; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.3,1.5,.5,1);
+  --shadow:0 1px 2px rgba(18,24,41,.04),0 10px 30px -16px rgba(40,50,120,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+.ic{width:18px;height:18px;flex:none}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#D9DDE8;border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+
+/* ---------- top bar ---------- */
+.top{height:70px;display:flex;align-items:center;gap:14px;padding:0 26px;background:rgba(255,255,255,.82);border-bottom:1px solid rgba(229,232,241,.8);animation:fadeIn .5s ease both}
+.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;box-shadow:0 8px 20px -8px rgba(79,91,255,.7);transition:transform .4s var(--spring)}
+.logo:hover{transform:rotate(-8deg) scale(1.06)}
+.logo .ic{width:23px;height:23px}
+.brand b{font-family:"Segoe UI Variable Display","Segoe UI";font-size:19px;letter-spacing:-.3px;font-weight:700}
+.brand small{display:block;color:var(--muted);font-size:12px;margin-top:-1px}
+.pill{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 13px;border-radius:99px;font-size:12.5px;font-weight:600;transition:.3s}
+.pill.live{background:var(--ok-soft);color:#0B7F5B}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(18,167,121,.5)}70%{box-shadow:0 0 0 9px rgba(18,167,121,0)}100%{box-shadow:0 0 0 0 rgba(18,167,121,0)}}
+.pill.host{background:rgba(255,255,255,.7);border:1px solid var(--line);color:var(--muted);font-weight:500}
+.pill .ic{width:15px;height:15px}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 15px;border-radius:12px;font-weight:600;font-size:13.5px;white-space:nowrap;transition:transform .25s var(--spring),box-shadow .25s,background .2s,border-color .2s,color .2s}
+.btn:active{transform:scale(.96)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),#7457F8);color:#fff;box-shadow:0 8px 20px -10px rgba(79,91,255,.9)}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 14px 26px -12px rgba(79,91,255,.9)}
+.btn.ghost{background:var(--solid);border:1px solid var(--line);color:var(--text)}
+.btn.ghost:hover{border-color:#C9CFF7;color:var(--brand);transform:translateY(-1px)}
+.btn.sm{height:32px;padding:0 11px;font-size:12.5px;border-radius:10px}
+.btn.icon{width:34px;padding:0;height:34px}
+.btn.danger:hover{color:var(--bad);border-color:#F3C1C3;background:var(--bad-soft)}
+
+/* ---------- layout ---------- */
+.wrap{height:calc(100% - 70px);display:grid;grid-template-columns:372px 1fr;gap:20px;padding:20px 26px 22px}
+.card{background:var(--surface);border:1px solid rgba(229,232,241,.9);border-radius:var(--r);box-shadow:var(--shadow);animation:rise .7s var(--ease) both;animation-delay:calc(var(--d,0) * 80ms)}
+.card-h{display:flex;align-items:center;gap:10px;padding:16px 18px 0}
+.card-h h2{font-size:15px;font-weight:700;letter-spacing:-.1px}
+.card-h p{color:var(--muted);font-size:12.5px}
+
+/* ---------- connect card ---------- */
+.connect{padding:20px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.qr-stage{position:relative;border-radius:22px;padding:18px 16px 14px;background:radial-gradient(120% 90% at 0% 0%,#E9ECFF 0%,transparent 60%),radial-gradient(120% 90% at 100% 100%,#F1EAFF 0%,transparent 60%),rgba(247,248,252,.8);border:1px solid var(--line2);overflow:hidden}
+.ring{position:relative;width:min(100%,240px);margin:0 auto;padding:3px;border-radius:22px;overflow:hidden;isolation:isolate;box-shadow:0 18px 40px -18px rgba(79,91,255,.55)}
+.ring::before{content:"";position:absolute;inset:-40%;z-index:-1;background:conic-gradient(#4F5BFF,#8B5CF6,#22C3EE,#4F5BFF 70%,#E6E9FF 85%,#4F5BFF);animation:turn 5s linear infinite;will-change:transform}
+@keyframes turn{to{transform:rotate(360deg)}}
+.qr{background:#fff;border-radius:19px;padding:12px;aspect-ratio:1;display:grid;place-items:center;position:relative;overflow:hidden}
+.qr img{width:100%;height:100%;image-rendering:pixelated;opacity:0}
+.qr img.in{animation:qrIn .7s var(--ease) forwards}
+@keyframes qrIn{from{opacity:0;filter:blur(8px);transform:scale(.92)}to{opacity:1;filter:none;transform:none}}
+.scan{position:absolute;left:8px;right:8px;height:42px;top:0;background:linear-gradient(180deg,transparent,rgba(79,91,255,.10) 70%,rgba(79,91,255,.35) 100%);border-bottom:2px solid rgba(79,91,255,.55);border-radius:4px;animation:scan 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes scan{0%{transform:translateY(-50px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(250px);opacity:0}}
+.badge{position:absolute;width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;border:4px solid #fff;z-index:2}
+.badge .ic{width:22px;height:22px}
+.badge::before,.badge::after{content:"";position:absolute;inset:-4px;border-radius:16px;border:2px solid rgba(79,91,255,.45);animation:ringOut 2.4s ease-out infinite}
+.badge::after{animation-delay:1.2s}
+@keyframes ringOut{from{transform:scale(1);opacity:.9}to{transform:scale(1.9);opacity:0}}
+.qr-cap{text-align:center;margin-top:12px;font-size:13px;color:var(--muted)}
+.qr-cap b{color:var(--text)}
+.lbl{font-size:11.5px;font-weight:700;color:var(--faint);letter-spacing:.6px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.lbl .ic{width:13px;height:13px}
+.url{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:13px;padding:6px 6px 6px 12px;background:#fff;transition:.2s}
+.url:hover{border-color:#C9CFF7;box-shadow:0 0 0 4px var(--brand-soft)}
+.url code{flex:1;font-family:"Cascadia Code",Consolas,monospace;font-size:17px;letter-spacing:.2px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.pin{display:flex;gap:6px;perspective:400px}
+.pin span{flex:1;height:46px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:21px;font-weight:700;font-family:"Segoe UI Variable Display","Segoe UI";transition:.3s}
+.pin span.flip{animation:flip .6s var(--ease) both;animation-delay:calc(var(--i) * 60ms)}
+@keyframes flip{from{transform:rotateX(90deg);opacity:0}to{transform:none;opacity:1}}
+.pin.off span{color:var(--faint);text-decoration:line-through;background:var(--soft)}
+select.ipsel{width:100%;height:36px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff;font-size:13px}
+.hint{display:flex;gap:10px;padding:12px;border-radius:13px;background:var(--brand-soft);color:#3A44C4;font-size:12.5px;line-height:1.45}
+.hint .ic{width:17px;height:17px;margin-top:1px}
+
+/* ---------- stats ---------- */
+.main{display:grid;grid-template-rows:auto minmax(0,1fr) minmax(0,1.1fr);gap:20px;min-height:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{padding:15px 16px;display:flex;gap:13px;align-items:center;transition:transform .35s var(--spring),box-shadow .3s}
+.stat:hover{transform:translateY(-3px);box-shadow:0 18px 34px -18px rgba(40,50,120,.3)}
+.stat .si{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;transition:transform .4s var(--spring)}
+.stat:hover .si{transform:rotate(-8deg) scale(1.08)}
+.stat .si .ic{width:20px;height:20px}
+.stat b{display:inline-block;font-size:22px;letter-spacing:-.5px;font-family:"Segoe UI Variable Display","Segoe UI";line-height:1.1}
+.stat small{display:block;color:var(--muted);font-size:12px}
+
+/* ---------- shares ---------- */
+.shares{display:flex;flex-direction:column;min-height:0}
+.drop{margin:14px 18px 0;border:1.5px dashed #C9D0F7;border-radius:15px;padding:13px 16px;display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,rgba(250,251,255,.9),rgba(243,244,255,.9));cursor:pointer;transition:.25s var(--ease)}
+.drop:hover{border-color:var(--brand);background:var(--brand-soft)}
+.drop:hover .di{transform:translateY(-3px)}
+.drop .di{width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--brand);transition:transform .35s var(--spring)}
+.drop b{font-size:13.5px}.drop p{font-size:12.5px;color:var(--muted)}
+.list{overflow:auto;padding:10px 10px 12px;flex:1;min-height:0}
+.item{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:13px;transition:background .2s,height .32s var(--ease),opacity .3s,transform .3s var(--ease),padding .32s;overflow:hidden}
+.item:hover{background:rgba(238,240,255,.6)}
+.item.leaving{height:0!important;opacity:0;transform:translateX(24px);padding-top:0;padding-bottom:0}
+.fi{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;position:relative;transition:transform .35s var(--spring)}
+.item:hover .fi{transform:scale(1.08)}
+.fi .ic{width:19px;height:19px}
+.fi.ping::after{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid var(--ok);animation:ringOut 1.8s ease-out infinite}
+.item .meta{flex:1;min-width:0}
+.item .meta b{display:block;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .meta small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .acts{display:flex;gap:4px;opacity:0;transform:translateX(8px);transition:.25s var(--ease)}
+.item:hover .acts{opacity:1;transform:none}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;color:var(--muted);padding:14px 10px;min-height:100%;animation:fadeIn .5s ease both}
+.empty .ei{flex:none;width:56px;height:56px;border-radius:17px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--brand);margin-bottom:4px;box-shadow:var(--shadow)}
+.empty b{color:var(--text);font-size:14px}
+
+/* ---------- tabs ---------- */
+.tabs-card{display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--line2);position:relative}
+.tab{display:flex;align-items:center;gap:7px;padding:9px 12px 11px;font-weight:600;font-size:13px;color:var(--muted);border-radius:10px 10px 0 0;transition:color .2s}
+.tab .ic{width:16px;height:16px;transition:transform .35s var(--spring)}
+.tab:hover{color:var(--text)}.tab:hover .ic{transform:scale(1.15)}
+.tab.on{color:var(--brand)}
+.tab .n{background:var(--brand-soft);color:var(--brand);font-size:11px;border-radius:99px;padding:1px 7px;animation:bump .5s var(--spring)}
+.ink{position:absolute;bottom:-1px;height:2.5px;border-radius:3px;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:left .45s var(--spring),width .45s var(--spring)}
+.pane{display:none;overflow:auto;padding:8px 10px 12px;flex:1;min-height:0}
+.pane.on{display:block;animation:fadeIn .35s var(--ease) both}
+.ev .fi{width:34px;height:34px;border-radius:10px}
+.ev .fi .ic{width:16px;height:16px}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
+.on-tag{background:var(--ok-soft);color:#0B7F5B}.off-tag{background:var(--soft);color:var(--faint);border:1px solid var(--line)}
+.msg{border:1px solid var(--line);border-radius:13px;padding:10px 12px;margin:6px 4px;background:#fff;transition:height .32s,opacity .3s,transform .3s,padding .3s;overflow:hidden}
+.msg.leaving{height:0!important;opacity:0;padding-top:0;padding-bottom:0;margin:0 4px;border-width:0}
+.msg.pc{background:linear-gradient(180deg,#F5F6FF,#fff);border-color:#DADFFF}
+.msg pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:13.5px;margin:4px 0 2px;max-height:140px;overflow:auto}
+.msg .mh{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.msg .mh .ic{width:15px;height:15px}
+.compose{display:flex;gap:8px;padding:6px 4px 10px}
+.compose textarea{flex:1;resize:none;height:44px;border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none;background:#fff;transition:.2s}
+.compose textarea:focus{border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft);height:72px}
+.set{display:flex;align-items:center;gap:14px;padding:14px 10px;border-bottom:1px solid var(--line2)}
+.set:last-child{border:0}
+.set .meta{flex:1}.set .meta b{font-size:13.5px}.set .meta small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.sw{width:46px;height:27px;border-radius:99px;background:#D6DAE6;position:relative;transition:background .3s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:left .4s var(--spring),width .2s}
+.sw:active::after{width:26px}
+.sw.on{background:linear-gradient(135deg,#12A779,#22C38E)}.sw.on::after{left:22px}
+.sw.on:active::after{left:17px}
+.rowx{display:flex;align-items:center;gap:8px;padding:6px 6px 8px}
+
+/* ---------- toast + drop overlay ---------- */
+.toasts{position:fixed;right:24px;bottom:24px;display:flex;flex-direction:column;gap:10px;z-index:60;pointer-events:none}
+.toast{background:#fff;border:1px solid var(--line);color:var(--text);padding:11px 14px 11px 11px;border-radius:14px;font-weight:600;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:0 20px 40px -18px rgba(40,50,120,.4);animation:toastIn .5s var(--spring) both;min-width:240px;max-width:380px}
+.toast.out{animation:toastOut .35s var(--ease) forwards}
+.toast .ti{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;background:var(--ok-soft);color:var(--ok)}
+.toast .ti .ic{width:16px;height:16px}
+.toast small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(40px) scale(.95)}}
+.overlay{position:fixed;inset:10px;z-index:40;pointer-events:none;display:grid;place-items:center;opacity:0;transform:scale(1.02);transition:.25s var(--ease);background:rgba(238,240,255,.85);border-radius:20px}
+.overlay svg.ants{position:absolute;inset:0;width:100%;height:100%}
+.overlay svg.ants rect{x:2px;y:2px;width:calc(100% - 4px);height:calc(100% - 4px);fill:none;stroke:var(--brand);stroke-width:3;stroke-dasharray:12 10;animation:ants 1s linear infinite}
+@keyframes ants{to{stroke-dashoffset:-22}}
+.overlay .ob{background:#fff;padding:22px 30px;border-radius:20px;font-weight:700;color:var(--brand);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;align-items:center;font-size:15px}
+.overlay .ob .ic{width:34px;height:34px;animation:float 1.4s ease-in-out infinite}
+body.dragging .overlay{opacity:1;transform:none}
+@media (max-width:1150px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<script>document.write(auroraHtml)</script>
+<header class="top">
+  <div class="logo" id="logo"></div>
+  <div class="brand"><b>{{ app_name }}</b><small>Share files over Wi-Fi · no cables, no apps</small></div>
+  <span class="pill live" style="margin-left:10px"><span class="dot"></span><span id="liveTxt">Live</span></span>
+  <span class="pill host" id="hostPill"></span>
+  <div class="sp"></div>
+  <button class="btn ghost rp" id="phoneView"></button>
+  <button class="btn primary rp" id="addFilesTop"></button>
+</header>
+
+<div class="wrap">
+  <aside class="card connect" style="--d:0">
+    <div>
+      <div class="card-h" style="padding:0 0 12px"><div><h2>Connect a device</h2><p>Scan with any phone camera</p></div></div>
+      <div class="qr-stage">
+        <div class="ring"><div class="qr"><img id="qr" alt="QR code"><div class="scan"></div><div class="badge" id="qrBadge"></div></div></div>
+        <div class="qr-cap">Point your phone camera here, then <b>tap the link</b></div>
+      </div>
+    </div>
+    <div><div class="lbl" id="lblUrl"></div>
+      <div class="url"><code id="url">…</code><button class="btn ghost sm icon rp" id="copyUrl" title="Copy link"></button></div></div>
+    <div><div class="lbl" id="lblPin"></div><div class="pin" id="pin"></div></div>
+    <div id="ipRow" style="display:none"><div class="lbl" id="lblNet"></div><select class="ipsel" id="ipSel"></select></div>
+    <div class="hint" id="hint"></div>
+  </aside>
+
+  <section class="main">
+    <div class="stats">
+      <div class="card stat" style="--d:1"><div class="si" style="background:#EEF0FF;color:#4F5BFF" id="s1i"></div><div><b id="sShares">0</b><small>Shared items</small></div></div>
+      <div class="card stat" style="--d:2"><div class="si" style="background:#E4F7EF;color:#12A779" id="s2i"></div><div><b id="sDevices">0</b><small>Devices online</small></div></div>
+      <div class="card stat" style="--d:3"><div class="si" style="background:#FFF1E6;color:#D9731A" id="s3i"></div><div><b id="sDown">0</b><small id="sDownSub">Downloads</small></div></div>
+      <div class="card stat" style="--d:4"><div class="si" style="background:#F1EAFE;color:#7C4DDB" id="s4i"></div><div><b id="sUp">0</b><small id="sUpSub">Received</small></div></div>
+    </div>
+
+    <div class="card shares" style="--d:5">
+      <div class="card-h">
+        <div style="flex:1"><h2>Shared with devices</h2><p>Only what you add here is visible on the network</p></div>
+        <button class="btn ghost sm rp" id="addFolder"></button>
+        <button class="btn ghost sm rp" id="addFiles"></button>
+        <button class="btn ghost sm icon danger rp" id="clearShares" title="Stop sharing everything"></button>
+      </div>
+      <div class="drop" id="drop"><div class="di" id="dropIc"></div>
+        <div><b>Drag &amp; drop files or folders here</b><p>Or click to choose files · they appear instantly on every phone</p></div></div>
+      <div class="list" id="shareList"></div>
+    </div>
+
+    <div class="card tabs-card" style="--d:6">
+      <div class="tabs" id="tabs">
+        <button class="tab on" data-t="activity"></button>
+        <button class="tab" data-t="devices"></button>
+        <button class="tab" data-t="received"></button>
+        <button class="tab" data-t="clipboard"></button>
+        <button class="tab" data-t="settings"></button>
+        <span class="ink" id="ink"></span>
+      </div>
+      <div class="pane on" id="p-activity"><div id="actList"></div></div>
+      <div class="pane" id="p-devices"><div id="devList"></div></div>
+      <div class="pane" id="p-received"><div class="rowx" id="recvHead"></div><div id="recvList"></div></div>
+      <div class="pane" id="p-clipboard">
+        <div class="compose"><textarea id="msgText" placeholder="Type or paste text to send to your phone (links, OTPs, notes)… Enter to send"></textarea><button class="btn primary rp" id="msgSend"></button></div>
+        <div id="msgList"></div>
+      </div>
+      <div class="pane" id="p-settings"></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay"><svg class="ants" preserveAspectRatio="none"><rect rx="18"/></svg><div class="ob" id="ovTxt"></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = () => window.pywebview && window.pywebview.api;
+let S = null, lastUrl = '', lastPin = '', tab = 'activity', seenAct = null;
+
+// ---------- static chrome ----------
+$('#logo').innerHTML = logoSvg();
+$('#qrBadge').innerHTML = logoSvg();
+$('#phoneView').innerHTML = icon('phone') + 'Preview phone view';
+$('#addFilesTop').innerHTML = icon('plus') + 'Share files';
+$('#addFolder').innerHTML = icon('folder') + 'Add folder';
+$('#addFiles').innerHTML = icon('file') + 'Add files';
+$('#clearShares').innerHTML = icon('trash');
+$('#copyUrl').innerHTML = icon('copy');
+$('#dropIc').innerHTML = icon('upload');
+$('#lblUrl').innerHTML = icon('external') + 'Or type this in the phone browser';
+$('#lblPin').innerHTML = icon('lock') + 'Access PIN';
+$('#lblNet').innerHTML = icon('wifi') + 'Network adapter';
+$('#hint').innerHTML = icon('wifi') + '<div>Your phone and this PC must be on the <b>same Wi-Fi or hotspot</b>. If the page will not load, allow Beamly through Windows Firewall (Private networks).</div>';
+$('#s1i').innerHTML = icon('folder'); $('#s2i').innerHTML = icon('phone'); $('#s3i').innerHTML = icon('download'); $('#s4i').innerHTML = icon('upload');
+$('#msgSend').innerHTML = icon('send') + 'Send';
+$('#ovTxt').innerHTML = icon('upload') + 'Drop to share with your devices';
+
+const TABS = { activity: ['activity', 'Activity'], devices: ['phone', 'Devices'], received: ['download', 'Received'], clipboard: ['clip', 'Clipboard'], settings: ['gear', 'Settings'] };
+let tabSig = '';
+function drawTabs() {
+  const n = { devices: S ? S.online : 0, received: S ? S.received.length : 0, clipboard: S ? S.messages.length : 0 };
+  const sig = JSON.stringify(n);
+  if (sig === tabSig) return; tabSig = sig;
+  document.querySelectorAll('.tab').forEach(b => {
+    const [ic, name] = TABS[b.dataset.t];
+    b.innerHTML = icon(ic) + name + (n[b.dataset.t] ? `<span class="n">${n[b.dataset.t]}</span>` : '');
+  });
+  moveInk();
+}
+function moveInk() { const on = $('.tab.on'); if (!on) return; $('#ink').style.left = on.offsetLeft + 8 + 'px'; $('#ink').style.width = on.offsetWidth - 16 + 'px'; }
+window.addEventListener('resize', moveInk);
+document.querySelectorAll('.tab').forEach(b => { b.classList.add('rp'); b.onclick = () => selectTab(b.dataset.t); });
+function selectTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.t === t));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
+  moveInk();
+  if (t === 'clipboard') setTimeout(() => $('#msgText').focus(), 50);
+}
+
+// ---------- helpers ----------
+function toast(msg, sub, ic, color) {
+  const t = document.createElement('div'); t.className = 'toast';
+  const [bg, fg] = color || ['#E4F7EF', '#12A779'];
+  t.innerHTML = `<div class="ti" style="background:${bg};color:${fg}">${icon(ic || 'check')}</div><div>${esc(msg)}${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
+  $('#toasts').appendChild(t);
+  while ($('#toasts').children.length > 4) $('#toasts').firstChild.remove();
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 360); }, 3000);
+}
+async function post(url, body, method = 'POST') {
+  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  return r.json();
+}
+function copy(text, msg) {
+  const done = () => toast(msg || 'Copied to clipboard', null, 'copy', ['#EEF0FF', '#4F5BFF']);
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+  function fallback() { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
+}
+function kindIcon(e, extra) {
+  const k = fileKind(e); const [bg, fg] = KIND_COLORS[k];
+  return `<div class="fi ${extra || ''}" style="background:${bg};color:${fg}">${icon(k)}</div>`;
+}
+const ago = t => `<span data-ago="${t}"></span>`;
+const EMPTY = (ic, t, s) => `<div class="empty"><div class="ei float">${icon(ic)}</div><b>${t}</b><span>${s}</span></div>`;
+const EV = { download: ['download', '#FFF1E6', '#D9731A'], zip: ['zip', '#FFF1E6', '#D9731A'], upload: ['upload', '#F1EAFE', '#7C4DDB'], connect: ['phone', '#E4F7EF', '#12A779'], share: ['folder', '#EEF0FF', '#4F5BFF'], text: ['clip', '#E6F4FE', '#1A7FD4'], warn: ['shield', '#FFF4DE', '#E08A00'], info: ['info', '#EEF1F6', '#6A7489'] };
+
+// ---------- render ----------
+function render() {
+  if (!S) return;
+  $('#hostPill').innerHTML = icon('laptop') + esc(S.host);
+  $('#liveTxt').textContent = S.online ? `Live · ${S.online} device${S.online > 1 ? 's' : ''} connected` : 'Live · waiting for devices';
+  $('#url').textContent = S.short;
+  if (S.url !== lastUrl) {
+    lastUrl = S.url; const img = $('#qr');
+    img.classList.remove('in');
+    img.onload = () => { void img.offsetWidth; img.classList.add('in'); };
+    img.src = '/admin/qr.svg?u=' + encodeURIComponent(S.url);
+  }
+  $('#pin').className = 'pin' + (S.require_pin ? '' : ' off');
+  if (S.pin !== lastPin) {
+    lastPin = S.pin;
+    $('#pin').innerHTML = S.pin.split('').map((d, i) => `<span class="flip" style="--i:${i}">${d}</span>`).join('');
+  }
+  if (S.ips.length > 1) {
+    $('#ipRow').style.display = '';
+    const sel = $('#ipSel'), v = S.ips.join() + S.ip;
+    if (sel.dataset.v !== v) { sel.dataset.v = v; sel.innerHTML = S.ips.map(ip => `<option ${ip === S.ip ? 'selected' : ''}>${ip}</option>`).join(''); }
+  }
+  countTo($('#sShares'), S.shares.length);
+  countTo($('#sDevices'), S.online);
+  countTo($('#sDown'), S.stats.downloads);
+  countTo($('#sUp'), S.stats.uploads);
+  $('#sDownSub').textContent = 'Downloads · ' + humanSize(S.stats.bytes_out);
+  $('#sUpSub').textContent = 'Received · ' + humanSize(S.stats.bytes_in);
+  drawTabs();
+
+  keyed($('#shareList'), S.shares, s => s.id, s => `
+    <div class="item">${kindIcon({ dir: s.type === 'folder', ext: s.name.split('.').pop() })}
+      <div class="meta"><b>${esc(s.name)}</b><small>${esc(s.path)}${s.size != null ? ' · ' + humanSize(s.size) : ''}</small></div>
+      <div class="acts"><button class="btn ghost sm icon rp" title="Show on PC" data-act="reveal-share" data-id="${s.id}">${icon('open')}</button>
+      <button class="btn ghost sm icon danger rp" title="Stop sharing" data-act="unshare" data-id="${s.id}">${icon('x')}</button></div></div>`,
+    EMPTY('sparkle', 'Nothing shared yet', 'Add files or a folder — phones see them the moment you do.'));
+
+  keyed($('#actList'), S.activity, a => a.id, a => {
+    const [ic, bg, fg] = EV[a.kind] || EV.info;
+    return `<div class="item ev"><div class="fi" style="background:${bg};color:${fg}">${icon(ic)}</div>
+      <div class="meta"><b style="font-weight:500">${esc(a.text)}</b><small>${ago(a.t)}${a.ip ? ' · ' + a.ip : ''}${a.size ? ' · ' + humanSize(a.size) : ''}</small></div></div>`;
+  }, EMPTY('activity', 'No activity yet', 'Downloads, uploads and new devices appear here live.'));
+
+  keyed($('#devList'), S.devices, d => d.ip, d => `
+    <div class="item"><div class="fi ${d.online ? 'ping' : ''}" style="background:${d.online ? '#E4F7EF' : '#EEF1F6'};color:${d.online ? '#12A779' : '#9AA2B6'}">${icon(d.kind)}</div>
+      <div class="meta"><b>${esc(d.name)}</b><small>${d.ip} · ${d.downloads} downloads · ${d.uploads} sent · seen ${ago(d.last_seen)}</small></div>
+      <span class="tag ${d.online ? 'on-tag' : 'off-tag'}">${d.online ? 'Online' : 'Away'}</span></div>`,
+    EMPTY('phone', 'No devices yet', 'Scan the QR code with a phone to connect it.'));
+
+  const rh = `<small style="flex:1;color:var(--muted)">Saved to <b style="color:var(--text)">${esc(S.receive_dir)}</b></small><button class="btn ghost sm rp" data-act="open-recv">${icon('open')}Open folder</button>`;
+  if ($('#recvHead')._h !== rh) { $('#recvHead')._h = rh; $('#recvHead').innerHTML = rh; }
+  keyed($('#recvList'), S.received, f => f.path, (f, i) => `
+    <div class="item">${kindIcon({ ext: f.name.split('.').pop() })}
+      <div class="meta"><b>${esc(f.name)}</b><small>${humanSize(f.size)} · ${ago(f.mtime)}</small></div>
+      <div class="acts"><button class="btn ghost sm rp" data-act="open-file" data-i="${i}">${icon('external')}Open</button>
+      <button class="btn ghost sm icon rp" title="Show in folder" data-act="reveal-file" data-i="${i}">${icon('folder')}</button></div></div>`,
+    EMPTY('download', 'Nothing received yet', 'Files sent from phones land here.'));
+
+  keyed($('#msgList'), S.messages, m => m.id, (m, i) => `
+    <div class="msg ${m.pc ? 'pc' : ''}"><div class="mh">${icon(m.pc ? 'laptop' : 'phone')}<b style="color:var(--text)">${esc(m.from)}</b>· ${ago(m.t)}<div class="sp"></div>
+      <button class="btn ghost sm rp" data-act="copy-msg" data-id="${m.id}">${icon('copy')}Copy</button></div><pre>${esc(m.text)}</pre></div>`,
+    EMPTY('clip', 'Shared clipboard', 'Send text between this PC and your phone instantly.'));
+
+  const st = $('#p-settings'), sig = [S.allow_upload, S.require_pin, S.receive_dir, S.port].join('|');
+  if (st.dataset.sig !== sig) {
+    const firstPaint = !st.dataset.sig; st.dataset.sig = sig;
+    const set = (b, s, ctl, i) => `<div class="set ${firstPaint ? 'rise' : ''}" style="--i:${i}"><div class="meta"><b>${b}</b><small>${s}</small></div>${ctl}</div>`;
+    st.innerHTML =
+      set('Allow phones to send files to this PC', 'Uploads are saved to your receive folder', `<button class="sw ${S.allow_upload ? 'on' : ''}" data-act="toggle" data-k="allow_upload"></button>`, 0) +
+      set('Require PIN', 'Devices must scan the QR or enter the PIN. Turn off only on trusted home Wi-Fi.', `<button class="sw ${S.require_pin ? 'on' : ''}" data-act="toggle" data-k="require_pin"></button>`, 1) +
+      set('New PIN', 'Generate a fresh PIN — every device will need to re-scan', `<button class="btn ghost sm rp" data-act="new-pin">${icon('refresh')}Regenerate</button>`, 2) +
+      set('Receive folder', esc(S.receive_dir), `<button class="btn ghost sm rp" data-act="pick-recv">${icon('folder')}Change</button>`, 3) +
+      set('Server', `Port ${S.port} · Beamly {{ version }} · transfers never leave your local network`, `<button class="btn ghost sm rp" data-act="clear-activity">${icon('trash')}Clear activity</button>`, 4);
+  }
+
+  // live notifications for things that happen on phones
+  if (seenAct) {
+    S.activity.filter(a => !seenAct.has(a.id)).reverse().forEach(a => {
+      if (a.kind === 'connect') toast(a.text, 'Say hi from the Clipboard tab', 'phone', ['#E4F7EF', '#12A779']);
+      if (a.kind === 'upload') toast('File received', a.text, 'download', ['#F1EAFE', '#7C4DDB']);
+      if (a.kind === 'text') toast('New text snippet', a.text, 'clip', ['#E6F4FE', '#1A7FD4']);
+      if (a.kind === 'warn' && a.ip) toast('Wrong PIN attempt', a.ip, 'shield', ['#FFF4DE', '#E08A00']);
+    });
+  }
+  seenAct = new Set(S.activity.map(a => a.id));
+  tickAgo();
+}
+
+// ---------- actions ----------
+window.refresh = async function (dropped) {
+  try { S = await (await fetch('/admin/api/state')).json(); render(); if (dropped === true) toast('Added to shared items', 'Visible on every connected device', 'folder', ['#EEF0FF', '#4F5BFF']); } catch (e) { }
+};
+async function addVia(fn) {
+  if (!api()) return toast('Desktop bridge not ready', 'Open Beamly with START.bat', 'info', ['#FFF4DE', '#E08A00']);
+  const res = (await api()[fn]()) || [];
+  if (res.length) toast(res.length + ' item' + (res.length > 1 ? 's' : '') + ' shared', 'Phones can see them now', 'folder', ['#EEF0FF', '#4F5BFF']);
+  refresh();
+}
+const openPath = (p, reveal) => api() && api().open_path(p, !!reveal);
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b || !S) return;
+  const act = b.dataset.act;
+  if (act === 'unshare') { await post('/admin/api/shares/' + b.dataset.id, null, 'DELETE'); refresh(); toast('Stopped sharing', null, 'x', ['#FDECEC', '#E5484D']); }
+  if (act === 'reveal-share') { const s = S.shares.find(x => x.id === b.dataset.id); s && openPath(s.path, true); }
+  if (act === 'open-recv') openPath(S.receive_dir);
+  if (act === 'open-file') openPath(S.received[+b.dataset.i].path);
+  if (act === 'reveal-file') openPath(S.received[+b.dataset.i].path, true);
+  if (act === 'copy-msg') { const m = S.messages.find(x => x.id === b.dataset.id); m && copy(m.text, 'Text copied'); }
+  if (act === 'toggle') { b.classList.toggle('on'); await post('/admin/api/settings', { [b.dataset.k]: b.classList.contains('on') }); refresh(); }
+  if (act === 'new-pin') { await post('/admin/api/settings', { new_pin: true }); refresh(); toast('New PIN generated', 'Devices must scan the new QR code', 'refresh', ['#EEF0FF', '#4F5BFF']); }
+  if (act === 'pick-recv') { if (api()) { await api().pick_receive_dir(); st_reset(); refresh(); } }
+  if (act === 'clear-activity') { await post('/admin/api/clear', { what: 'activity' }); refresh(); }
+});
+function st_reset() { $('#p-settings').dataset.sig = 'x'; }
+
+$('#addFiles').onclick = () => addVia('pick_files');
+$('#addFilesTop').onclick = () => addVia('pick_files');
+$('#addFolder').onclick = () => addVia('pick_folder');
+$('#drop').onclick = () => addVia('pick_files');
+$('#clearShares').onclick = async () => { if (!S || !S.shares.length) return; await post('/admin/api/shares', null, 'DELETE'); refresh(); toast('Stopped sharing everything', null, 'trash', ['#FDECEC', '#E5484D']); };
+$('#copyUrl').onclick = () => copy(S.url, 'Link copied (includes PIN)');
+$('#phoneView').onclick = () => api() ? api().open_in_browser('http://127.0.0.1:' + S.port + '/') : window.open('/');
+$('#ipSel').onchange = async e => { await post('/admin/api/settings', { preferred_ip: e.target.value }); refresh(); };
+$('#msgSend').onclick = sendMsg;
+$('#msgText').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } };
+async function sendMsg() {
+  const t = $('#msgText').value.trim(); if (!t) { $('#msgText').focus(); return; }
+  await post('/api/messages', { text: t }); $('#msgText').value = ''; refresh(); toast('Sent to your devices', t.slice(0, 60), 'send', ['#EEF0FF', '#4F5BFF']);
+}
+
+// drag visuals (pywebview captures the real paths in Python)
+let dragN = 0;
+const endDrag = () => { dragN = 0; document.body.classList.remove('dragging'); };
+document.addEventListener('dragenter', () => { dragN++; document.body.classList.add('dragging'); });
+document.addEventListener('dragleave', () => { if (--dragN <= 0) endDrag(); });
+document.addEventListener('drop', e => { e.preventDefault(); endDrag(); setTimeout(refresh, 400); });
+document.addEventListener('dragover', e => e.preventDefault());
+
+drawTabs();
+refresh();
+setInterval(refresh, 1500);
+</script>
+</body>
+</html>

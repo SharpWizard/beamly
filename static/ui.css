@@ -1,0 +1,47 @@
+/* Beamly shared motion layer - light theme only */
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+
+/* soft animated aurora background */
+.aurora{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:#F4F6FB}
+.aurora i{position:absolute;border-radius:50%;opacity:.9;will-change:transform}
+.aurora i:nth-child(1){width:46vmax;height:46vmax;left:-12vmax;top:-16vmax;background:radial-gradient(closest-side,#DCE1FF,rgba(220,225,255,.55) 45%,rgba(220,225,255,0));animation:drift1 26s ease-in-out infinite alternate}
+.aurora i:nth-child(2){width:40vmax;height:40vmax;right:-14vmax;top:8vmax;background:radial-gradient(closest-side,#EDE1FF,rgba(237,225,255,.55) 45%,rgba(237,225,255,0));animation:drift2 30s ease-in-out infinite alternate}
+.aurora i:nth-child(3){width:36vmax;height:36vmax;left:22vmax;bottom:-20vmax;background:radial-gradient(closest-side,#D7F4EE,rgba(215,244,238,.55) 45%,rgba(215,244,238,0));animation:drift3 34s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(14vmax,10vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-12vmax,12vmax) scale(.9)}}
+@keyframes drift3{to{transform:translate(10vmax,-12vmax) scale(1.1)}}
+
+/* animated logo (beam waves) */
+.beam-logo .w1{animation:wave 2.4s ease-in-out infinite}
+.beam-logo .w2{animation:wave 2.4s ease-in-out .35s infinite}
+.beam-logo .core{animation:core 2.4s ease-in-out infinite;transform-origin:12px 14px}
+@keyframes wave{0%,100%{opacity:.35}45%{opacity:1}}
+@keyframes core{0%,100%{transform:scale(1)}45%{transform:scale(1.35)}}
+
+/* entrance helpers */
+.rise{animation:rise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(min(var(--i,0),14) * 45ms)}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.enter{animation:enter .55s cubic-bezier(.2,.9,.25,1.1) both}
+@keyframes enter{0%{opacity:0;transform:translateY(-10px) scale(.97);background:#E6E9FF}60%{opacity:1;background:#EEF0FF}100%{transform:none}}
+.fade-in{animation:fadeIn .35s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.float{animation:float 3.2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bump{animation:bump .55s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.22);color:#4F5BFF}100%{transform:scale(1)}}
+
+/* ripple */
+.rp{position:relative;overflow:hidden;isolation:isolate}
+.ripple{position:absolute;border-radius:50%;pointer-events:none;transform:scale(0);opacity:.28;background:currentColor;animation:ripple .6s ease-out forwards;z-index:-1}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+
+/* spinner */
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* stop every animation while the window is minimised / hidden */
+.paused *,.paused *::before,.paused *::after{animation-play-state:paused!important}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}

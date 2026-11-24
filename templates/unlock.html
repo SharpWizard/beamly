@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6FB">
+<title>{{ app_name }} · Enter PIN</title>
+<link rel="icon" href="/static/beamly.png"><link rel="apple-touch-icon" href="/static/beamly.png">
+<link rel="stylesheet" href="/static/ui.css">
+<script src="/static/icons.js"></script>
+<style>
+:root{--line:#E5E8F1;--text:#121829;--muted:#67708A;--brand:#4F5BFF;--brand2:#8B5CF6;--bad:#E5484D;--ok:#12A779;--spring:cubic-bezier(.3,1.5,.5,1);--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;display:grid;place-items:center;padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;color:var(--text)}
+.card{width:100%;max-width:390px;background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:28px;padding:32px 24px 26px;text-align:center;box-shadow:0 30px 70px -30px rgba(40,50,120,.4);animation:cardIn .8s var(--ease) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
+.logo{width:70px;height:70px;margin:0 auto 18px;border-radius:22px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;box-shadow:0 14px 30px -12px rgba(79,91,255,.8);position:relative;transition:background .4s}
+.logo .ic{width:34px;height:34px}
+.logo::before,.logo::after{content:"";position:absolute;inset:0;border-radius:22px;border:2px solid rgba(79,91,255,.4);animation:ringOut 2.6s ease-out infinite}
+.logo::after{animation-delay:1.3s}
+@keyframes ringOut{from{transform:scale(1);opacity:.9}to{transform:scale(1.7);opacity:0}}
+.card.ok .logo{background:linear-gradient(135deg,#12A779,#22C38E);animation:pop .6s var(--spring)}
+.card.ok .logo::before,.card.ok .logo::after{border-color:rgba(18,167,121,.45)}
+@keyframes pop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+h1{font-size:22px;letter-spacing:-.4px;animation:fadeIn .5s .15s ease both}
+p{color:var(--muted);font-size:14.5px;margin:6px 0 22px;line-height:1.45;animation:fadeIn .5s .22s ease both}
+.boxes{display:flex;gap:8px;justify-content:center;position:relative}
+.boxes span{width:46px;height:58px;border-radius:15px;border:1.5px solid var(--line);background:#F7F8FC;display:grid;place-items:center;font-size:25px;font-weight:700;transition:border-color .2s,background .2s,box-shadow .2s;animation:rise .5s var(--ease) both;animation-delay:calc(.25s + var(--i) * 50ms)}
+.boxes span.f{border-color:var(--brand);background:#EEF0FF;box-shadow:0 0 0 4px #EEF0FF}
+.boxes span.f::after{content:"";width:2px;height:24px;background:var(--brand);border-radius:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.boxes span.typed{animation:typed .3s var(--spring)}
+@keyframes typed{0%{transform:scale(.8)}100%{transform:scale(1)}}
+.boxes.err span{border-color:var(--bad);background:#FDECEC;animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.card.ok .boxes span{border-color:var(--ok);background:#E4F7EF;color:#0B7F5B;transition-delay:calc(var(--i) * 50ms)}
+#pin{position:absolute;inset:0;opacity:0;font-size:16px;width:100%}
+.msg{min-height:22px;margin-top:14px;font-size:13.5px;color:var(--bad);font-weight:600}
+.card.ok .msg{color:var(--ok)}
+.tip{margin-top:6px;font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:center;animation:fadeIn .5s .5s ease both}
+.tip .ic{width:16px;height:16px;color:var(--brand)}
+</style>
+</head>
+<body>
+<script>document.write(auroraHtml)</script>
+<div class="card" id="card">
+  <div class="logo" id="logo"></div>
+  <h1>Connect to {{ host }}</h1>
+  <p>Enter the 6-digit PIN shown in the {{ app_name }} window on the PC.</p>
+  <div class="boxes" id="boxes"><span style="--i:0"></span><span style="--i:1"></span><span style="--i:2"></span><span style="--i:3"></span><span style="--i:4"></span><span style="--i:5"></span>
+    <input id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" autofocus aria-label="PIN"></div>
+  <div class="msg" id="msg"></div>
+  <div class="tip" id="tip"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+$('logo').innerHTML = logoSvg();
+$('tip').innerHTML = icon('sparkle') + 'Tip: scanning the QR code skips this step';
+const inp = $('pin'), boxes = $('boxes'), spans = boxes.querySelectorAll('span');
+let prev = '';
+function paint() {
+  const v = inp.value;
+  spans.forEach((s, i) => {
+    s.textContent = v[i] || '';
+    s.classList.toggle('f', i === v.length && document.activeElement === inp);
+    if (i === v.length - 1 && v.length > prev.length) { s.classList.remove('typed'); void s.offsetWidth; s.classList.add('typed'); }
+  });
+  prev = v;
+}
+inp.addEventListener('input', async () => {
+  inp.value = inp.value.replace(/\D/g, '').slice(0, 6); paint(); boxes.classList.remove('err'); $('msg').textContent = '';
+  if (inp.value.length === 6) {
+    inp.blur();
+    try {
+      const r = await fetch('/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: inp.value }) });
+      const d = await r.json();
+      if (d.ok) {
+        $('card').classList.add('ok'); $('logo').innerHTML = icon('check'); $('msg').textContent = 'Connected! Opening files…';
+        setTimeout(() => location.reload(), 900);
+      } else fail(d.error);
+    } catch (e) { fail('Cannot reach the PC. Check your Wi-Fi.'); }
+  }
+});
+function fail(m) { boxes.classList.add('err'); $('msg').textContent = m; setTimeout(() => { inp.value = ''; prev = ''; paint(); inp.focus(); }, 420); }
+inp.addEventListener('focus', paint); inp.addEventListener('blur', paint);
+boxes.onclick = () => inp.focus();
+paint();
+</script>
+</body>
+</html>
